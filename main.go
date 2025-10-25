@@ -10,7 +10,13 @@ func main() {
 	const port = "8080"
 
 	myServeMux := http.NewServeMux()
-	myServeMux.Handle("/", http.FileServer(http.Dir(filepathRoot)))
+	myServeMux.Handle("/app/", http.StripPrefix("/app/", http.FileServer(http.Dir(filepathRoot))))
+	myServeMux.Handle("/app/assets/", http.StripPrefix("/app/", http.FileServer(http.Dir(filepathRoot))))
+	myServeMux.HandleFunc("/healthz/", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
 
 	srv := &http.Server{
 		Addr:    ":" + port,
