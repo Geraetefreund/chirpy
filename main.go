@@ -1,16 +1,20 @@
 package main
 
 import (
-	//"fmt"
-	//	"html"
 	"log"
 	"net/http"
 )
 
 func main() {
-	s := &http.Server{
-		Addr: ":8080",
+	const port = "8080"
+
+	myServeMux := http.NewServeMux()
+
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: myServeMux,
 	}
 
-	log.Fatal(s.ListenAndServe())
+	log.Printf("Serving on port: %s\n", port)
+	log.Fatal(srv.ListenAndServe())
 }
