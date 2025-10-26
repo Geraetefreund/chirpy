@@ -31,18 +31,18 @@ func main() {
 	myServeMux := http.NewServeMux()
 	myServeMux.Handle("/app/", metrics.middlewareMetricsInc(http.StripPrefix("/app/", http.FileServer(http.Dir(filepathRoot)))))
 	myServeMux.Handle("/app/assets", http.StripPrefix("/app/", http.FileServer(http.Dir(filepathRoot))))
-	myServeMux.HandleFunc("GET /healthz/", func(w http.ResponseWriter, req *http.Request) {
+	myServeMux.HandleFunc("GET /api/healthz/", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
-	myServeMux.HandleFunc("GET /metrics", func(w http.ResponseWriter, req *http.Request) {
+	myServeMux.HandleFunc("GET /api/metrics", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		// w.WriteHeader(http.StatusOK) // obsolete, automatically when writing to body
 		fmt.Fprintf(w, "Hits: %d", metrics.fileserverHits.Load())
 	})
 
-	myServeMux.HandleFunc("POST /reset", func(w http.ResponseWriter, req *http.Request) {
+	myServeMux.HandleFunc("POST /api/reset", func(w http.ResponseWriter, req *http.Request) {
 		metrics.resetMetrics(w, req)
 	})
 
