@@ -1,11 +1,29 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"sync/atomic"
 )
+
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) error {
+	response, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(code)
+	w.Write(response)
+	return nil
+}
+
+func respondWithError(w http.ResponseWriter, code int, msg string) error {
+	return respondWithJSON(w, code, map[string]string{"error": msg})
+}
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
@@ -23,6 +41,34 @@ func (cfg *apiConfig) resetMetrics(w http.ResponseWriter, req *http.Request) {
 	w.Write([]byte("Metrics reset"))
 }
 
+func validateChirp(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	type requestBody struct {
+		Body string `json:"body"`
+	}
+	type responseBody struct {
+		Valid bool `json:"valid"`
+	}
+
+	dat, err := io.ReadAll(r.Body)
+	if err != nil {
+		respondWithError(w, 500, "couldn't read request")
+		return
+	}
+	params := requestBody{}
+	err = json.Unmarshal(dat, &params)
+	if err != nil {
+		respondWithError(w, 500, "couldn't unmarshal parameters")
+	}
+	if len(params.Body) > 140 {
+		respondWithError(w, 400, "Chirp is too long")
+	} else {
+		respondWithJSON(w, 200, responseBody{
+			Valid: true,
+		})
+	}
+}
+
 func main() {
 	const filepathRoot = "."
 	const port = "8080"
@@ -36,6 +82,12 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
+
+	myServeMux.HandleFunc("POST /api/validate_chirp", func(w http.ResponseWriter, r *http.Request) {
+		validateChirp(w, r)
+
+	})
+
 	myServeMux.HandleFunc("GET /admin/metrics", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		// w.WriteHeader(http.StatusOK) // obsolete, automatically when writing to body
