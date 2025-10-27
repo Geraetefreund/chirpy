@@ -36,7 +36,7 @@ func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 			profanityMap[p] = struct{}{}
 		}
 
-		below, I simply created the map right there since it was only three words.
+		below, I simply created the map inline since it was only three words.
 	*/
 
 	profanityMap := map[string]struct{}{
