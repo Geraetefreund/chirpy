@@ -9,8 +9,8 @@ import (
 	"context"
 )
 
-const truncateUsers = `-- name: truncateUsers :exec
-TRUNCATE TABLE users
+const truncateUsers = `-- name: TruncateUsers :exec
+TRUNCATE TABLE users RESTART IDENTITY CASCADE
 `
 
 func (q *Queries) TruncateUsers(ctx context.Context) error {

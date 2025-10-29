@@ -45,19 +45,16 @@ func main() {
 	mux.Handle("/app/", fsHandler)
 
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
-	mux.HandleFunc("POST /api/validate_chirp", handlerChirpsValidate)
-
 	mux.HandleFunc("POST /api/users", apiCfg.handlerUserInfo)
+	mux.HandleFunc("POST /api/chirps", apiCfg.handlerChirpsCreate)
 
-	mux.HandleFunc("POST /admin/reset", apiCfg.handlerDeleteAllUsers)
+	mux.HandleFunc("POST /admin/reset", apiCfg.handlerTruncateUsersChirps)
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: mux,
 	}
-
 	log.Printf("Serving files from %s on port: %s\n", filepathRoot, port)
 	log.Fatal(srv.ListenAndServe())
-
 }

@@ -1,2 +1,2 @@
--- name: truncateUsers :exec
-TRUNCATE TABLE users;
+-- name: TruncateUsers :exec
+TRUNCATE TABLE users RESTART IDENTITY CASCADE;

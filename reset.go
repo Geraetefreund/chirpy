@@ -21,3 +21,25 @@ func (cfg *apiConfig) handlerDeleteAllUsers(w http.ResponseWriter, r *http.Reque
 	}
 
 }
+
+func (cfg *apiConfig) handlerTruncateUsersChirps(w http.ResponseWriter, r *http.Request) {
+	if cfg.platform != "dev" {
+		respondWithError(w, http.StatusForbidden, "Forbidden", nil)
+		return
+	}
+
+	err := cfg.db.TruncateChirps(r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "could not reset chirps", nil)
+		return
+	}
+
+	err = cfg.db.TruncateUsers(r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "could not reset users", nil)
+	}
+	cfg.fileserverHits.Store(0)
+	respondWithJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	w.Write([]byte("Hits reset to 0"))
+
+}
