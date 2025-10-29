@@ -14,20 +14,19 @@ type parameters struct {
 	Body   string `json:"body"`
 	UserID string `json:"user_id"`
 }
+type ChirpResp struct {
+	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Body      string    `json:"body"`
+	UserID    string    `json:"user_id"`
+}
 
 func (cfg *apiConfig) handlerGetAllChirps(w http.ResponseWriter, r *http.Request) {
 	dbChirps, err := cfg.db.GetAllChirps(r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chirps", err)
 		return
-	}
-
-	type ChirpResp struct {
-		ID        string    `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		Body      string    `json:"body"`
-		UserID    string    `json:"user_id"`
 	}
 
 	out := make([]ChirpResp, 0, len(dbChirps))
@@ -73,15 +72,7 @@ func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	type chirpResponse struct {
-		ID        string    `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		Body      string    `json:"body"`
-		UserID    string    `json:"user_id"`
-	}
-
-	response := chirpResponse{
+	response := ChirpResp{
 		ID:        chirp.ID.String(),
 		Body:      chirp.Body,
 		UserID:    chirp.UserID.String(),
@@ -108,6 +99,14 @@ func (cfg *apiConfig) handlerGetChirpByID(w http.ResponseWriter, r *http.Request
 		respondWithError(w, http.StatusInternalServerError, "database error", err)
 		return
 	}
-	respondWithJSON(w, http.StatusOK, chirp)
+
+	resp := ChirpResp{
+		ID:        chirp.ID.String(),
+		Body:      chirp.Body,
+		UserID:    chirp.UserID.String(),
+		CreatedAt: chirp.CreatedAt,
+		UpdatedAt: chirp.UpdatedAt,
+	}
+	respondWithJSON(w, http.StatusOK, resp)
 
 }
