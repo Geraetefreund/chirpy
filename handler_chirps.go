@@ -13,15 +13,6 @@ type parameters struct {
 	UserID string `json:"user_id"`
 }
 
-// was used for creatChirp... but I am not sure of that is the correct way???
-type chirpResponse struct {
-	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Body      string    `json:"body"`
-	UserID    string    `json:"user_id"`
-}
-
 func (cfg *apiConfig) handlerGetAllChirps(w http.ResponseWriter, r *http.Request) {
 	dbChirps, err := cfg.db.GetAllChirps(r.Context())
 	if err != nil {
@@ -78,6 +69,14 @@ func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "could not create chirp", err)
 		return
+	}
+
+	type chirpResponse struct {
+		ID        string    `json:"id"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		Body      string    `json:"body"`
+		UserID    string    `json:"user_id"`
 	}
 
 	response := chirpResponse{
