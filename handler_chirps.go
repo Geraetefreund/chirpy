@@ -13,12 +13,42 @@ type parameters struct {
 	UserID string `json:"user_id"`
 }
 
+// was used for creatChirp... but I am not sure of that is the correct way???
 type chirpResponse struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Body      string    `json:"body"`
 	UserID    string    `json:"user_id"`
+}
+
+func (cfg *apiConfig) handlerGetAllChirps(w http.ResponseWriter, r *http.Request) {
+	dbChirps, err := cfg.db.GetAllChirps(r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chirps", err)
+		return
+	}
+
+	type ChirpResp struct {
+		ID        string    `json:"id"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		Body      string    `json:"body"`
+		UserID    string    `json:"user_id"`
+	}
+
+	out := make([]ChirpResp, 0, len(dbChirps))
+	for _, c := range dbChirps {
+		out = append(out, ChirpResp{
+			ID:        c.ID.String(),
+			CreatedAt: c.CreatedAt,
+			UpdatedAt: c.UpdatedAt,
+			Body:      c.Body,
+			UserID:    c.UserID.String(),
+		})
+	}
+
+	respondWithJSON(w, http.StatusOK, out)
 }
 
 func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request) {
