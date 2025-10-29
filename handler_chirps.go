@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"github.com/Geraetefreund/chirpy/internal/database"
 	"github.com/google/uuid"
 	"net/http"
@@ -87,4 +89,25 @@ func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request
 		UpdatedAt: chirp.CreatedAt,
 	}
 	respondWithJSON(w, http.StatusCreated, response)
+}
+
+func (cfg *apiConfig) handlerGetChirpByID(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("chirpID")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "invalid id", nil)
+		return
+	}
+
+	chirp, err := cfg.db.GetChirpByID(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			respondWithError(w, http.StatusNotFound, "chirp not found", err)
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, "database error", err)
+		return
+	}
+	respondWithJSON(w, http.StatusOK, chirp)
+
 }
