@@ -15,7 +15,7 @@ func (cfg *apiConfig) handlerDeleteAllUsers(w http.ResponseWriter, r *http.Reque
 		respondWithError(w, http.StatusForbidden, "Forbidden", nil)
 		return
 	}
-	err := cfg.db.TruncateUsers(r.Context())
+	err := cfg.db.Reset(r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Couldn't truncate table users", err)
 	}
@@ -28,13 +28,13 @@ func (cfg *apiConfig) handlerTruncateUsersChirps(w http.ResponseWriter, r *http.
 		return
 	}
 
-	err := cfg.db.TruncateChirps(r.Context())
+	err := cfg.db.Reset(r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "could not reset chirps", nil)
 		return
 	}
 
-	err = cfg.db.TruncateUsers(r.Context())
+	err = cfg.db.Reset(r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "could not reset users", nil)
 	}
