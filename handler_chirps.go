@@ -14,7 +14,7 @@ type parameters struct {
 	Body   string `json:"body"`
 	UserID string `json:"user_id"`
 }
-type ChirpResp struct {
+type Chirp struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -29,9 +29,10 @@ func (cfg *apiConfig) handlerGetAllChirps(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	out := make([]ChirpResp, 0, len(dbChirps))
+	// this was so weird, but also on second thought obvious.
+	out := make([]Chirp, 0, len(dbChirps))
 	for _, c := range dbChirps {
-		out = append(out, ChirpResp{
+		out = append(out, Chirp{
 			ID:        c.ID.String(),
 			CreatedAt: c.CreatedAt,
 			UpdatedAt: c.UpdatedAt,
@@ -72,7 +73,7 @@ func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	response := ChirpResp{
+	response := Chirp{
 		ID:        chirp.ID.String(),
 		Body:      chirp.Body,
 		UserID:    chirp.UserID.String(),
@@ -100,7 +101,7 @@ func (cfg *apiConfig) handlerGetChirpByID(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	resp := ChirpResp{
+	resp := Chirp{
 		ID:        chirp.ID.String(),
 		Body:      chirp.Body,
 		UserID:    chirp.UserID.String(),
