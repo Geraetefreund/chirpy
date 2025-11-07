@@ -15,13 +15,17 @@ type apiConfig struct {
 	fileserverHits atomic.Int32
 	db             *database.Queries
 	platform       string
+	secret         string
 }
 
 func main() {
 	const filepathRoot = "."
 	const port = "8080"
 
-	godotenv.Load()
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("error loading dotenv@")
+	}
+
 	dbURL := os.Getenv("DB_URL")
 
 	if dbURL == "" {
@@ -30,7 +34,7 @@ func main() {
 
 	dbConn, err := sql.Open("postgres", dbURL)
 	if err != nil {
-		log.Fatalf("Error opening database: %s", err)
+		log.Fatalf("error opening database: %s", err)
 	}
 	dbQueries := database.New(dbConn)
 
@@ -38,6 +42,7 @@ func main() {
 		fileserverHits: atomic.Int32{},
 		db:             dbQueries,
 		platform:       os.Getenv("PLATFORM"),
+		secret:         os.Getenv("SECRET"),
 	}
 
 	mux := http.NewServeMux()
