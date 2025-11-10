@@ -4,15 +4,16 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/Geraetefreund/chirpy/internal/database"
-	"github.com/google/uuid"
 	"net/http"
 	"time"
+
+	"github.com/Geraetefreund/chirpy/internal/auth"
+	"github.com/Geraetefreund/chirpy/internal/database"
+	"github.com/google/uuid"
 )
 
 type parameters struct {
-	Body   string `json:"body"`
-	UserID string `json:"user_id"`
+	Body string `json:"body"`
 }
 type Chirp struct {
 	ID        string    `json:"id"`
@@ -53,18 +54,31 @@ func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// parse brearer from headers
+	tokenStr, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized", err)
+		return
+	}
+	// validate JWT
+	userId, err := auth.ValidateJWT(tokenStr, cfg.secret)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized", err)
+		return
+	}
+
+	// set dbParams.UserID from the token's subject/claim
+
 	// validate + sanitize -> cleanedBody
 	cleanedBody, err := validateAndClean(params.Body)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "", err)
 		return
 	}
-	// of course, that was obvious NOT!
-	uID, _ := uuid.Parse(params.UserID)
 
 	dbParams := database.CreateChirpParams{
 		Body:   cleanedBody,
-		UserID: uID,
+		UserID: userId,
 	}
 
 	chirp, err := cfg.db.CreateChirp(r.Context(), dbParams)

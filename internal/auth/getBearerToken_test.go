@@ -5,6 +5,26 @@ import (
 	"testing"
 )
 
+func TestGetBearerToken_LowerCase(t *testing.T) {
+	h := http.Header{}
+	h.Set("Authorization", "bearer abc.def.ghi")
+	_, err := GetBearerToken(h)
+	if err == nil {
+		t.Fatalf("error header not to spec: %v", err)
+	}
+}
+
+func TestGetBearerToken_TrimSpaces(t *testing.T) {
+	h := http.Header{}
+	h.Set("Authorization", "  Bearer    abc.def.ghi")
+	got, err := GetBearerToken(h)
+	if err != nil {
+		t.Fatalf("unexptected error: %v", err)
+	}
+	if got != "abc.def.ghi" {
+		t.Errorf("want abc.def.ghi, got %s", got)
+	}
+}
 func TestGetBearerToken_ExtraSpaces(t *testing.T) {
 	h := http.Header{}
 	h.Set("Authorization", "Bearer   abc.def.ghi")
