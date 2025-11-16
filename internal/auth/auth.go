@@ -2,11 +2,22 @@ package auth
 
 import (
 	_ "crypto/ecdsa"
+	"crypto/rand"
+	"encoding/hex"
 	"github.com/alexedwards/argon2id"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"time"
 )
+
+func MakeRefreshToken() (string, error) {
+	key := make([]byte, 32)
+	if _, err := rand.Read(key); err != nil {
+		return "", err
+	}
+	encodedKey := hex.EncodeToString(key)
+	return encodedKey, nil
+}
 
 func HashPassword(password string) (string, error) {
 	hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
