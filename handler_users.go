@@ -65,9 +65,8 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 
 func (cfg *apiConfig) handlerUsersLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Email            string `json:"email"`
-		Password         string `json:"password"`
-		ExpiresInSeconds *int   `json:"expires_in_seconds"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 	type response struct {
 		User
@@ -97,36 +96,29 @@ func (cfg *apiConfig) handlerUsersLogin(w http.ResponseWriter, r *http.Request) 
 		respondWithError(w, http.StatusUnauthorized, "incorrect email or password", nil)
 		return
 	}
-	var secs int
-	if params.ExpiresInSeconds == nil {
-		secs = 3600
-	} else {
-		v := *params.ExpiresInSeconds
-		if v <= 0 {
-			secs = 3600
-		} else if v > 3600 {
-			secs = 3600
-		} else {
-			secs = v
-		}
-	}
 
-	expires := time.Duration(secs) * time.Second
+	expires := time.Duration(3600) * time.Second
 
 	token, err := auth.MakeJWT(user.ID, cfg.secret, expires)
-
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "error creating token: ", err)
 		return
 	}
 
+	refreshToken, err := auth.MakeRefreshToken()
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "error creating refresh token: ", err)
+		return
+	}
+
 	respondWithJSON(w, http.StatusOK, response{
 		User: User{
-			ID:        user.ID,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
-			Email:     user.Email,
-			Token:     token,
+			ID:           user.ID,
+			CreatedAt:    user.CreatedAt,
+			UpdatedAt:    user.UpdatedAt,
+			Email:        user.Email,
+			Token:        token,
+			RefreshToken: refreshToken,
 		},
 	})
 }

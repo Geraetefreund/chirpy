@@ -15,8 +15,8 @@ func MakeRefreshToken() (string, error) {
 	if _, err := rand.Read(key); err != nil {
 		return "", err
 	}
-	encodedKey := hex.EncodeToString(key)
-	return encodedKey, nil
+	refreshToken := hex.EncodeToString(key)
+	return refreshToken, nil
 }
 
 func HashPassword(password string) (string, error) {
