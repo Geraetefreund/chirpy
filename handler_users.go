@@ -18,6 +18,27 @@ type User struct {
 	RefreshToken string    `json:"refresh_token"`
 }
 
+func (cfg *apiConfig) handlerRefreshToken(w http.ResponseWriter, r *http.Request) {
+	refreshToken, err := auth.GetBearerToken(r.Header)
+	if err != nil || refreshToken == "" {
+		respondWithError(w, http.StatusUnauthorized, "missing or malformed token", err)
+		return
+	}
+	user, err := cfg.db.GetUserFromRefreshToken(r.Context(), refreshToken)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "invalid refresh token", err)
+		return
+	}
+
+	jwtToken, err := auth.MakeJWT(user.ID, cfg.secret, time.Hour)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "error creating token: ", err)
+		return
+	}
+	respondWithJSON(w, http.StatusOK, map[string]string{"token": jwtToken})
+
+}
+
 func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request) {
 	// what we expect from the request
 	type parameters struct {
@@ -109,6 +130,22 @@ func (cfg *apiConfig) handlerUsersLogin(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "error creating refresh token: ", err)
 		return
+	}
+
+	// calculate the refresh token's expiration time (60 days)
+	refreshTokenExpiresAt := time.Now().AddDate(0, 0, 60)
+
+	// prepare the parameters for the database insertion
+	createRefreshTokenParams := database.CreateRefreshTokenParams{
+		Token:     refreshToken,
+		ExpiresAt: refreshTokenExpiresAt,
+		UserID:    user.ID,
+	}
+
+	// insert the refresh token into the database
+	_, err = cfg.db.CreateRefreshToken(r.Context(), createRefreshTokenParams)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "failed to create refresh token in database", err)
 	}
 
 	respondWithJSON(w, http.StatusOK, response{
