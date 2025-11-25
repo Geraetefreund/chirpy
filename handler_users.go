@@ -18,6 +18,22 @@ type User struct {
 	RefreshToken string    `json:"refresh_token"`
 }
 
+func (cfg *apiConfig) handlerRevokeToken(w http.ResponseWriter, r *http.Request) {
+	refreshToken, err := auth.GetBearerToken(r.Header)
+	if err != nil || refreshToken == "" {
+		respondWithError(w, http.StatusUnauthorized, "missing or malformed token", err)
+		return
+	}
+	// mark revoked_at and updated_at in DB, then 204
+	rows, err := cfg.db.RevokeRefreshToken(r.Context(), refreshToken)
+	if err != nil || rows == 0 {
+		// treat missing/already revoked as unauthorized
+		respondWithError(w, http.StatusUnauthorized, "invalid refresh token", err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (cfg *apiConfig) handlerRefreshToken(w http.ResponseWriter, r *http.Request) {
 	refreshToken, err := auth.GetBearerToken(r.Header)
 	if err != nil || refreshToken == "" {
