@@ -23,28 +23,6 @@ type Chirp struct {
 	UserID    string    `json:"user_id"`
 }
 
-func (cfg *apiConfig) handlerGetAllChirps(w http.ResponseWriter, r *http.Request) {
-	dbChirps, err := cfg.db.GetChirps(r.Context())
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chirps", err)
-		return
-	}
-
-	// this was so weird, but also on second thought obvious.
-	out := make([]Chirp, 0, len(dbChirps))
-	for _, c := range dbChirps {
-		out = append(out, Chirp{
-			ID:        c.ID.String(),
-			CreatedAt: c.CreatedAt,
-			UpdatedAt: c.UpdatedAt,
-			Body:      c.Body,
-			UserID:    c.UserID.String(),
-		})
-	}
-
-	respondWithJSON(w, http.StatusOK, out)
-}
-
 func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -124,4 +102,25 @@ func (cfg *apiConfig) handlerGetChirpByID(w http.ResponseWriter, r *http.Request
 	}
 	respondWithJSON(w, http.StatusOK, resp)
 
+}
+func (cfg *apiConfig) handlerGetAllChirps(w http.ResponseWriter, r *http.Request) {
+	dbChirps, err := cfg.db.GetChirps(r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chirps", err)
+		return
+	}
+
+	// this was so weird, but also on second thought obvious.
+	out := make([]Chirp, 0, len(dbChirps))
+	for _, c := range dbChirps {
+		out = append(out, Chirp{
+			ID:        c.ID.String(),
+			CreatedAt: c.CreatedAt,
+			UpdatedAt: c.UpdatedAt,
+			Body:      c.Body,
+			UserID:    c.UserID.String(),
+		})
+	}
+
+	respondWithJSON(w, http.StatusOK, out)
 }
