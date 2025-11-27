@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/Geraetefreund/chirpy/internal/auth"
 	"net/http"
 	"time"
+
+	"github.com/Geraetefreund/chirpy/internal/auth"
+	"github.com/Geraetefreund/chirpy/internal/database"
 )
 
 func (cfg *apiConfig) handlerUpdateEmailAndPW(w http.ResponseWriter, r *http.Request) {
@@ -41,6 +43,26 @@ func (cfg *apiConfig) handlerUpdateEmailAndPW(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	paramsDB := database.UpdateEmailAndPWParams{
+		ID:             userID,
+		Email:          params.Email,
+		HashedPassword: hashedPW,
+	}
+
+	user, err := cfg.db.UpdateEmailAndPW(r.Context(), paramsDB)
+
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "couldn't update user credentials", err)
+	}
+
+	respondWithJSON(w, http.StatusOK, response{
+		User: User{
+			ID:        user.ID,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+			Email:     user.Email,
+		},
+	})
 }
 
 func (cfg *apiConfig) handlerRevokeToken(w http.ResponseWriter, r *http.Request) {

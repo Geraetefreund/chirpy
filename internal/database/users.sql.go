@@ -90,3 +90,31 @@ func (q *Queries) LookUpUserByEmail(ctx context.Context, email string) (User, er
 	)
 	return i, err
 }
+
+const updateEmailAndPW = `-- name: UpdateEmailAndPW :one
+UPDATE users
+SET email = $1,
+  hashed_password = $2,
+  updated_at = Now()
+WHERE id = $3
+RETURNING id, created_at, updated_at, email, hashed_password
+`
+
+type UpdateEmailAndPWParams struct {
+	Email          string
+	HashedPassword string
+	ID             uuid.UUID
+}
+
+func (q *Queries) UpdateEmailAndPW(ctx context.Context, arg UpdateEmailAndPWParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateEmailAndPW, arg.Email, arg.HashedPassword, arg.ID)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.HashedPassword,
+	)
+	return i, err
+}
