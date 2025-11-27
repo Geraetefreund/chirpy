@@ -42,6 +42,7 @@ func (cfg *apiConfig) handlerUpdateEmailAndPW(w http.ResponseWriter, r *http.Req
 	}
 
 }
+
 func (cfg *apiConfig) handlerRevokeToken(w http.ResponseWriter, r *http.Request) {
 
 	refreshToken, err := auth.GetBearerToken(r.Header)
