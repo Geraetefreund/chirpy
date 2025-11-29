@@ -143,6 +143,16 @@ func (cfg *apiConfig) handlerUsersLogin(w http.ResponseWriter, r *http.Request) 
 }
 
 func (cfg *apiConfig) webhookChirpyRed(w http.ResponseWriter, r *http.Request) {
+	apiKEY, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "API Key missing or malformed", err)
+		return
+	}
+	if cfg.polkaKey != apiKEY {
+		respondWithError(w, http.StatusUnauthorized, "API Key mismatch", err)
+		return
+	}
+
 	type parameters struct {
 		Event string `json:"event"`
 		Data  struct {
@@ -151,7 +161,7 @@ func (cfg *apiConfig) webhookChirpyRed(w http.ResponseWriter, r *http.Request) {
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
-	err := decoder.Decode(&params)
+	err = decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode json", err)
 		return
