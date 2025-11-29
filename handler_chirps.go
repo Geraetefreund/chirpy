@@ -149,20 +149,27 @@ func (cfg *apiConfig) handlerDeleteChirpByID(w http.ResponseWriter, r *http.Requ
 
 func (cfg *apiConfig) handlerGetAllChirpsByID(w http.ResponseWriter, r *http.Request) {
 	userID := r.URL.Query().Get("author_id")
+	sort := r.URL.Query().Get("sort")
 	var dbChirps []database.Chirp
 	var err error
-	id, err := uuid.Parse(userID)
-	if err != nil {
-	}
+	id, _ := uuid.Parse(userID)
 
 	if userID == "" {
-		dbChirps, err = cfg.db.GetChirps(r.Context())
+		if sort == "desc" {
+			dbChirps, err = cfg.db.GetAllChirpsDesc(r.Context())
+		} else {
+			dbChirps, err = cfg.db.GetChirps(r.Context())
+		}
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chirps from database", err)
 			return
 		}
 	} else {
-		dbChirps, err = cfg.db.GetChirpsByID(r.Context(), id)
+		if sort == "desc" {
+			dbChirps, err = cfg.db.GetChirpsByIDDesc(r.Context(), id)
+		} else {
+			dbChirps, err = cfg.db.GetChirpsByID(r.Context(), id)
+		}
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chirps from database", err)
 			return
@@ -181,26 +188,4 @@ func (cfg *apiConfig) handlerGetAllChirpsByID(w http.ResponseWriter, r *http.Req
 	}
 	respondWithJSON(w, http.StatusOK, out)
 
-}
-
-func (cfg *apiConfig) handlerGetAllChirps(w http.ResponseWriter, r *http.Request) {
-	dbChirps, err := cfg.db.GetChirps(r.Context())
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chirps", err)
-		return
-	}
-
-	// this was so weird, but also on second thought obvious.
-	out := make([]Chirp, 0, len(dbChirps))
-	for _, c := range dbChirps {
-		out = append(out, Chirp{
-			ID:        c.ID.String(),
-			CreatedAt: c.CreatedAt,
-			UpdatedAt: c.UpdatedAt,
-			Body:      c.Body,
-			UserID:    c.UserID.String(),
-		})
-	}
-
-	respondWithJSON(w, http.StatusOK, out)
 }
